@@ -1,0 +1,10 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.3
+python-dotenv>=1.0
+httpx>=0.27
+openai>=1.40
+# Optional (NOT installed by default): Microsoft Entra ID auth for Azure AI Search.
+# Crosscheck's Foundry IQ provider uses API-key auth, so this is not required.
+# Install only if you want Entra ID auth:  pip install "azure-identity>=1.17"

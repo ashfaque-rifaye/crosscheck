@@ -1,0 +1,284 @@
+{
+  "query": "",
+  "mode": "full-scan",
+  "provider": "Mock corpus",
+  "llm_mode": "offline",
+  "summary": {
+    "sources_scanned": 8,
+    "passages_retrieved": 22,
+    "claims_extracted": 20,
+    "conflicts_found": 7,
+    "high": 5,
+    "medium": 2,
+    "low": 0
+  },
+  "trace": [
+    { "step": "Retrieve via Mock corpus", "detail": "22 passages across 8 sources", "status": "done" },
+    { "step": "Extract claims", "detail": "20 atomic claims extracted", "status": "done" },
+    { "step": "Cluster by subject", "detail": "13 comparable topics", "status": "done" },
+    { "step": "Detect contradictions", "detail": "7 grounded contradictions (2 dropped by the 2-source grounding guardrail)", "status": "done" },
+    { "step": "Rank by severity & confidence", "detail": "ordered most-critical first", "status": "done" }
+  ],
+  "conflicts": [
+    {
+      "id": "k0",
+      "topic": "full-scan",
+      "title": "Password rotation: every 90 days vs never expires",
+      "type": "direct-negation",
+      "severity": "high",
+      "confidence": 0.96,
+      "explanation": "The security policy mandates rotation every 90 days, while onboarding tells new hires their password never expires. Both cannot be true.",
+      "side_a": {
+        "statement": "All user account passwords must be rotated at least once every 90 days.",
+        "value": "every 90 days",
+        "source_ref": {
+          "source_id": "security-policy",
+          "source_name": "Information Security Policy",
+          "source_type": "policy",
+          "locator": "Password rotation",
+          "version": "3.2",
+          "effective_date": "2026-02-01",
+          "precedence": 5
+        }
+      },
+      "side_b": {
+        "statement": "Set your account password once during onboarding; your password never expires.",
+        "value": "never",
+        "source_ref": {
+          "source_id": "onboarding-guide",
+          "source_name": "New Hire Onboarding Guide",
+          "source_type": "onboarding",
+          "locator": "Setting your password",
+          "version": "1.0",
+          "effective_date": "2025-06-15",
+          "precedence": 2
+        }
+      },
+      "suggested_resolution": "Treat \"Information Security Policy\" as authoritative.",
+      "resolution_basis": "Authority: Information Security Policy (precedence 5) outranks New Hire Onboarding Guide (precedence 2)."
+    },
+    {
+      "id": "k1",
+      "topic": "full-scan",
+      "title": "MFA: required vs optional",
+      "type": "direct-negation",
+      "severity": "high",
+      "confidence": 0.95,
+      "explanation": "Security requires MFA for every employee without exception; onboarding says it is optional during the first week.",
+      "side_a": {
+        "statement": "Multi-factor authentication is required for every employee accessing internal systems, without exception.",
+        "value": "required",
+        "source_ref": {
+          "source_id": "security-policy",
+          "source_name": "Information Security Policy",
+          "source_type": "policy",
+          "locator": "Multi-factor authentication",
+          "version": "3.2",
+          "effective_date": "2026-02-01",
+          "precedence": 5
+        }
+      },
+      "side_b": {
+        "statement": "MFA is optional during your first week while you get set up.",
+        "value": "optional",
+        "source_ref": {
+          "source_id": "onboarding-guide",
+          "source_name": "New Hire Onboarding Guide",
+          "source_type": "onboarding",
+          "locator": "Multi-factor authentication",
+          "version": "1.0",
+          "effective_date": "2025-06-15",
+          "precedence": 2
+        }
+      },
+      "suggested_resolution": "Treat \"Information Security Policy\" as authoritative.",
+      "resolution_basis": "Authority: Information Security Policy (precedence 5) outranks New Hire Onboarding Guide (precedence 2)."
+    },
+    {
+      "id": "k2",
+      "topic": "full-scan",
+      "title": "API authentication: X-Api-Key vs Bearer token",
+      "type": "temporal-outdated",
+      "severity": "high",
+      "confidence": 0.95,
+      "explanation": "The v1 reference authenticates via the X-Api-Key header, but the v2 changelog replaced it with Authorization: Bearer and stopped accepting X-Api-Key.",
+      "side_a": {
+        "statement": "Authenticate by sending your API key in the X-Api-Key request header.",
+        "value": "X-Api-Key",
+        "source_ref": {
+          "source_id": "api-spec-v1",
+          "source_name": "Public API Reference (v1)",
+          "source_type": "api_spec",
+          "locator": "Authentication",
+          "version": "v1",
+          "effective_date": "2025-09-01",
+          "precedence": 3
+        }
+      },
+      "side_b": {
+        "statement": "Authentication now uses the Authorization: Bearer <key> header; the legacy X-Api-Key header is no longer accepted.",
+        "value": "Bearer",
+        "source_ref": {
+          "source_id": "api-changelog",
+          "source_name": "API Changelog (v2)",
+          "source_type": "changelog",
+          "locator": "Authentication change",
+          "version": "v2",
+          "effective_date": "2026-05-01",
+          "precedence": 4
+        }
+      },
+      "suggested_resolution": "Treat \"API Changelog (v2)\" as authoritative.",
+      "resolution_basis": "Authority: API Changelog (v2) (precedence 4) outranks Public API Reference (v1) (precedence 3)."
+    },
+    {
+      "id": "k3",
+      "topic": "full-scan",
+      "title": "Primary DB lock handling: restart vs never restart",
+      "type": "scope-condition-mismatch",
+      "severity": "high",
+      "confidence": 0.93,
+      "explanation": "The runbook says to restart the primary database to clear lock contention; the architecture reference forbids that exact action because it risks data loss, and prescribes failover instead.",
+      "side_a": {
+        "statement": "If you observe lock contention on the primary database, restart the primary instance to clear the stuck locks.",
+        "value": "restart primary",
+        "source_ref": {
+          "source_id": "db-runbook",
+          "source_name": "Database Operations Runbook",
+          "source_type": "runbook",
+          "locator": "Clearing lock contention",
+          "version": "2.1",
+          "effective_date": "2025-11-10",
+          "precedence": 3
+        }
+      },
+      "side_b": {
+        "statement": "Never restart the primary database to resolve lock contention; fail over to a healthy replica instead.",
+        "value": "never restart",
+        "source_ref": {
+          "source_id": "architecture-doc",
+          "source_name": "Platform Architecture Reference",
+          "source_type": "architecture",
+          "locator": "Primary database failure handling",
+          "version": "4.0",
+          "effective_date": "2026-01-20",
+          "precedence": 4
+        }
+      },
+      "suggested_resolution": "Treat \"Platform Architecture Reference\" as authoritative.",
+      "resolution_basis": "Authority: Platform Architecture Reference (precedence 4) outranks Database Operations Runbook (precedence 3)."
+    },
+    {
+      "id": "k4",
+      "topic": "full-scan",
+      "title": "Uptime SLA: 99.9% vs 99.5%",
+      "type": "numeric-mismatch",
+      "severity": "high",
+      "confidence": 0.92,
+      "explanation": "The public pricing sheet guarantees 99.9% uptime, but the signed Master Services Agreement commits to 99.5%. The customer-facing promise exceeds the contractual commitment.",
+      "side_a": {
+        "statement": "We guarantee 99.9% monthly uptime for all paid plans.",
+        "value": "99.9%",
+        "source_ref": {
+          "source_id": "pricing-sheet",
+          "source_name": "Public Pricing Sheet",
+          "source_type": "pricing",
+          "locator": "Service level agreement",
+          "version": "2026-Q2",
+          "effective_date": "2026-04-01",
+          "precedence": 3
+        }
+      },
+      "side_b": {
+        "statement": "The Provider commits to 99.5% monthly uptime.",
+        "value": "99.5%",
+        "source_ref": {
+          "source_id": "master-contract",
+          "source_name": "Master Services Agreement",
+          "source_type": "contract",
+          "locator": "Service level commitment",
+          "version": "MSA-v5",
+          "effective_date": "2026-03-15",
+          "precedence": 6
+        }
+      },
+      "suggested_resolution": "Treat \"Master Services Agreement\" as authoritative.",
+      "resolution_basis": "Authority: Master Services Agreement (precedence 6) outranks Public Pricing Sheet (precedence 3)."
+    },
+    {
+      "id": "k5",
+      "topic": "full-scan",
+      "title": "API rate limit: 100 rps vs 60 rps",
+      "type": "temporal-outdated",
+      "severity": "medium",
+      "confidence": 0.94,
+      "explanation": "The v1 reference advertises 100 requests/second per key; the v2 changelog reduced it to 60 as a breaking change.",
+      "side_a": {
+        "statement": "Each API key is allowed up to 100 requests per second.",
+        "value": "100 rps",
+        "source_ref": {
+          "source_id": "api-spec-v1",
+          "source_name": "Public API Reference (v1)",
+          "source_type": "api_spec",
+          "locator": "Rate limits",
+          "version": "v1",
+          "effective_date": "2025-09-01",
+          "precedence": 3
+        }
+      },
+      "side_b": {
+        "statement": "The per-key rate limit is now 60 requests per second, reduced from the previous 100.",
+        "value": "60 rps",
+        "source_ref": {
+          "source_id": "api-changelog",
+          "source_name": "API Changelog (v2)",
+          "source_type": "changelog",
+          "locator": "Rate limit change",
+          "version": "v2",
+          "effective_date": "2026-05-01",
+          "precedence": 4
+        }
+      },
+      "suggested_resolution": "Treat \"API Changelog (v2)\" as authoritative.",
+      "resolution_basis": "Authority: API Changelog (v2) (precedence 4) outranks Public API Reference (v1) (precedence 3)."
+    },
+    {
+      "id": "k6",
+      "topic": "full-scan",
+      "title": "Refund window: 30 days vs 14 days",
+      "type": "numeric-mismatch",
+      "severity": "medium",
+      "confidence": 0.9,
+      "explanation": "The pricing sheet offers a 30-day refund window, while the Master Services Agreement limits refunds to 14 days from the invoice date.",
+      "side_a": {
+        "statement": "Customers on the Standard plan may request a full refund within 30 days of purchase.",
+        "value": "30 days",
+        "source_ref": {
+          "source_id": "pricing-sheet",
+          "source_name": "Public Pricing Sheet",
+          "source_type": "pricing",
+          "locator": "Refunds",
+          "version": "2026-Q2",
+          "effective_date": "2026-04-01",
+          "precedence": 3
+        }
+      },
+      "side_b": {
+        "statement": "The Customer may request a refund within 14 days of the invoice date.",
+        "value": "14 days",
+        "source_ref": {
+          "source_id": "master-contract",
+          "source_name": "Master Services Agreement",
+          "source_type": "contract",
+          "locator": "Refund window",
+          "version": "MSA-v5",
+          "effective_date": "2026-03-15",
+          "precedence": 6
+        }
+      },
+      "suggested_resolution": "Treat \"Master Services Agreement\" as authoritative.",
+      "resolution_basis": "Authority: Master Services Agreement (precedence 6) outranks Public Pricing Sheet (precedence 3)."
+    }
+  ],
+  "note": "Offline demo — replaying the bundled cached report (no live LLM call)."
+}

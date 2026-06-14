@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Secrets / local config
+.env
+*.local
+
+# Editor / OS
+.DS_Store
+.vscode/
+*.log
+
+# Prior AI-tool spec — not part of this build
+.kiro/

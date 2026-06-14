@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crosscheck — Enterprise Knowledge Contradiction Auditor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: "class" };
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    .mono { font-family: ui-monospace, "SFMono-Regular", "Cascadia Code", Consolas, monospace; }
+    .fade-in { animation: fade 0.45s ease both; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .spin { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .vs-line::before {
+      content: "VS"; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.08em; color: #64748b; background: #0b1120; padding: 0.15rem 0.4rem;
+      border-radius: 9999px; border: 1px solid #1e293b;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 grid place-items-center shadow-lg shadow-indigo-900/40">
+            <span class="text-xl">⚖️</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold tracking-tight text-white">Crosscheck</h1>
+            <p class="text-sm text-slate-400">Find where your sources <span class="text-violet-300 font-medium">disagree</span>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span id="provider-badge" class="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900 text-slate-300">provider…</span>
+        <span id="llm-badge" class="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900 text-slate-300">llm…</span>
+      </div>
+    </header>
+
+    <!-- Pitch -->
+    <p class="text-slate-400 text-sm mb-6 max-w-3xl">
+      Ordinary RAG answers from <em>one</em> retrieved source and never notices when your documents
+      contradict each other. Crosscheck does the inverse: it audits a body of knowledge and surfaces
+      the <span class="text-slate-200">silent conflicts</span> — citing both sides, classifying the
+      clash, and ranking by severity. Grounded by Microsoft <span class="text-violet-300">Foundry IQ</span>.
+    </p>
+
+    <!-- Controls -->
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5 mb-6">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input id="query" type="text" placeholder="Audit a topic — e.g. password policy, refund window, API rate limit"
+          class="flex-1 rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/60" />
+        <div class="flex gap-2">
+          <button id="run-btn" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-5 py-3 text-sm font-semibold text-white transition">Run audit</button>
+          <button id="scan-btn" class="rounded-xl border border-slate-700 hover:border-slate-500 px-5 py-3 text-sm font-semibold text-slate-200 transition">Full scan</button>
+        </div>
+      </div>
+      <div id="examples" class="flex flex-wrap gap-2 mt-3 text-xs text-slate-400"></div>
+    </section>
+
+    <!-- Reasoning trace -->
+    <section id="trace-section" class="hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5 mb-6">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Reasoning trace</h2>
+      <ol id="trace" class="space-y-2"></ol>
+    </section>
+
+    <!-- Summary -->
+    <section id="summary-section" class="hidden mb-5">
+      <div class="flex flex-wrap items-center gap-3">
+        <span id="summary-text" class="text-sm text-slate-300"></span>
+        <span class="flex-1"></span>
+        <div id="filters" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="space-y-4"></section>
+
+    <!-- Note / empty -->
+    <p id="note" class="hidden text-sm text-slate-400 mt-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4"></p>
+
+    <footer class="mt-12 pt-6 border-t border-slate-800 text-xs text-slate-500">
+      Crosscheck · Microsoft Agents League · Reasoning track · IQ layer: Foundry IQ ·
+      <span class="text-slate-600">Synthetic demo corpus — no confidential data.</span>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
