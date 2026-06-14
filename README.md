@@ -33,6 +33,10 @@ Crosscheck does the **inverse of RAG**. Instead of answering, it audits:
 It refuses to assert a contradiction it can't prove: **no conflict is emitted without two
 citations from two different source documents.**
 
+A built-in **conflict map** turns the result into a picture — each source document is a node,
+each contradiction an arc colored by severity and weighted by confidence — so you can see the
+shape of disagreement at a glance and click any arc to jump to its details.
+
 > _Run it and open <http://127.0.0.1:8000> to see the live UI — animated reasoning trace,
 > summary stats, severity filters, and side-by-side cited conflict cards._
 <!-- Add a screenshot at docs/screenshot.png and embed it here for the submission. -->
@@ -53,8 +57,14 @@ mode over a bundled cached report, so the UI always works.
 
 - **Add live reasoning:** put `AZURE_OPENAI_*` (or `OPENAI_API_KEY`) in `.env` — the engine
   now extracts claims and detects contradictions with an LLM over the synthetic corpus.
-- **Add real Foundry IQ:** follow [`infra/README.md`](infra/README.md), then set
-  `PROVIDER=foundry`. Citations now resolve to a real Foundry IQ knowledge base.
+- **Add real Foundry IQ:** check access (`./infra/check_access.ps1`), provision +
+  upload the bundled corpus (`./infra/setup_foundry_iq.ps1`), create the knowledge base, then
+  set `PROVIDER=foundry`. Citations now resolve to a real Foundry IQ knowledge base.
+
+> **"My Azure is empty — how do I validate?"** That's expected. Crosscheck brings its own data:
+> `setup_foundry_iq.ps1` uploads `corpus/` for you, and the knowledge base is built over it. The
+> in-app **Setup & access** panel (and `GET /api/setup-status`) shows live, step-by-step what is
+> wired up and what to do next — Step 0, surfaced inside the app.
 
 ---
 
