@@ -37,9 +37,24 @@ A built-in **conflict map** turns the result into a picture — each source docu
 each contradiction an arc colored by severity and weighted by confidence — so you can see the
 shape of disagreement at a glance and click any arc to jump to its details.
 
-> _Run it and open <http://127.0.0.1:8000> to see the live UI — animated reasoning trace,
-> summary stats, severity filters, and side-by-side cited conflict cards._
+> _Run it and open the live UI — a dark, enterprise-grade dashboard with an animated reasoning
+> trace, summary stats, severity filters, an interactive conflict map, and side-by-side cited
+> conflict cards._
 <!-- Add a screenshot at docs/screenshot.png and embed it here for the submission. -->
+
+### Interface
+
+The UI is a single-page app (no build step — Tailwind via CDN) designed to feel like an
+enterprise audit console rather than a chatbot:
+
+- **Palette:** deep navy base with an electric-blue primary and amber/red severity accents.
+- **Icons:** all inline SVG (no emojis) for a crisp, professional look.
+- **Reasoning trace:** each step slides in and resolves to a check as the agent works.
+- **Conflict map:** a radial node-link graph — nodes are source documents, arcs are
+  contradictions (colour = severity, thickness = confidence); click an arc to jump to its card.
+- **Conflict cards:** side-by-side cited claims with a `VS` divider, severity + type tags,
+  a confidence bar, and a clearly-labelled suggested resolution.
+- **Setup panel:** live status of provider / LLM / Foundry IQ access with next-step guidance.
 
 ---
 
@@ -54,6 +69,9 @@ py -3.13 -m venv .venv
 Open <http://127.0.0.1:8000>, type a topic (e.g. **password policy**, **refund window**,
 **API rate limit**) or hit **Full scan**. With no credentials it runs in **offline demo**
 mode over a bundled cached report, so the UI always works.
+
+> If port 8000 is unavailable on your machine, pick another — e.g. `--port 8080` — and open
+> the matching URL.
 
 - **Add live reasoning:** put `AZURE_OPENAI_*` (or `OPENAI_API_KEY`) in `.env` — the engine
   now extracts claims and detects contradictions with an LLM over the synthetic corpus.
@@ -124,7 +142,30 @@ corpus/                  8 synthetic sources with planted contradictions
 web/                     single-page UI (index.html + app.js)
 samples/cached_report.json   offline demo / test oracle
 infra/                   Azure provisioning + Foundry IQ setup guide
+UPGRADE_BACKLOG.md       queued enhancements (see roadmap below)
 ```
+
+## Status &amp; roadmap
+
+**Built and working today:**
+
+- End-to-end audit pipeline: retrieve → extract claims → cluster → detect contradictions →
+  rank, with a live animated reasoning trace.
+- Pluggable knowledge-retrieval boundary (mock corpus by default; Foundry IQ via config).
+- Grounding guardrail (no conflict without two citations from two different sources).
+- Revamped enterprise-grade UI: navy/electric-blue palette, all-SVG icons (no emojis),
+  interactive radial conflict map, severity filters, side-by-side cited conflict cards, and a
+  live setup/access panel.
+- Offline demo mode that never hard-crashes (cached-report fallback).
+
+**Queued upgrades** (tracked in [`UPGRADE_BACKLOG.md`](UPGRADE_BACKLOG.md)):
+
+| # | Upgrade | Why it matters | Cloud needed |
+| - | ------- | -------------- | ------------ |
+| 1 | Verifier / critic agent step | Makes reasoning visibly multi-step; challenges and prunes weak conflicts | No |
+| 2 | Resolution-drafting agent | Drafts corrected policy text, not just a heuristic suggestion | No |
+| 3 | Live document upload | Audit your own docs on the spot — stronger demo than a fixed corpus | No |
+| 4 | Real Foundry IQ knowledge base | Targets the "Best Use of IQ Tools" prize | Yes (Azure) |
 
 ## How it maps to the rubric
 
@@ -133,7 +174,7 @@ infra/                   Azure provisioning + Foundry IQ setup guide
 | Accuracy & relevance | Reasoning track + Foundry IQ; every output cited |
 | Reasoning & multi-step | retrieve → extract → cluster → detect → rank, visible in the trace |
 | Creativity & originality | inverts RAG: finds disagreements, not answers |
-| UX & presentation | animated trace, severity filters, side-by-side cited cards |
+| UX & presentation | enterprise dashboard: animated trace, interactive conflict map, severity filters, side-by-side cited cards, all-SVG icons |
 | Reliability & safety | 2-source guardrail, labelled suggestions, graceful fallback |
 
 ## License

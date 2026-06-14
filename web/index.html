@@ -9,148 +9,321 @@
   <style>
     :root { color-scheme: dark; }
     html { scroll-behavior: smooth; }
-    body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #040d1a;
+    }
     .mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
-    .fade-in { animation: fade .45s ease both; }
-    @keyframes fade { from { opacity:0; transform:translateY(6px);} to {opacity:1; transform:none;} }
-    .spin { animation: spin .8s linear infinite; }
+
+    /* Background grid */
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(14, 165, 233, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Glow accents */
+    .glow-blue { box-shadow: 0 0 40px rgba(14,165,233,0.15), 0 0 80px rgba(14,165,233,0.06); }
+    .glow-amber { box-shadow: 0 0 30px rgba(245,158,11,0.12); }
+    .text-glow { text-shadow: 0 0 30px rgba(14,165,233,0.4); }
+
+    /* Animations */
+    .fade-in { animation: fade .4s ease both; }
+    @keyframes fade { from { opacity:0; transform:translateY(8px);} to {opacity:1; transform:none;} }
+    .slide-in { animation: slide .35s ease both; }
+    @keyframes slide { from { opacity:0; transform:translateX(-8px);} to {opacity:1; transform:none;} }
+    .spin { animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg);} }
-    .aurora { background:
-      radial-gradient(60% 50% at 15% 0%, rgba(124,58,237,.18), transparent 60%),
-      radial-gradient(50% 40% at 95% 5%, rgba(56,189,248,.12), transparent 60%); }
-    /* graph */
+    .pulse-dot { animation: pdot 2s ease-in-out infinite; }
+    @keyframes pdot { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.2)} }
+
+    /* Card hover */
+    .conflict-card { transition: border-color .2s, transform .2s; }
+    .conflict-card:hover { transform: translateY(-1px); }
+    .card-flash { animation: flash 1s ease; }
+    @keyframes flash { 0%{box-shadow:0 0 0 0 rgba(14,165,233,.5)} 100%{box-shadow:0 0 0 16px rgba(14,165,233,0)} }
+
+    /* Graph */
     .chord { fill:none; stroke-linecap:round; cursor:pointer; transition:stroke-width .15s, opacity .15s; }
-    .chord:hover { opacity:1 !important; }
-    .node-dot { cursor:pointer; }
-    .card-flash { animation: flash 1.2s ease; }
-    @keyframes flash { 0%{ box-shadow:0 0 0 0 rgba(139,92,246,.6);} 100%{ box-shadow:0 0 0 14px rgba(139,92,246,0);} }
+    .chord:hover { opacity:1 !important; stroke-width: 3.5 !important; }
+    .node-dot { cursor:pointer; transition: r .15s; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+
+    /* Severity */
+    .sev-critical { background: rgba(239,68,68,.12); color: #fca5a5; border-color: rgba(239,68,68,.3); }
+    .sev-high     { background: rgba(249,115,22,.12); color: #fdba74; border-color: rgba(249,115,22,.3); }
+    .sev-medium   { background: rgba(234,179,8,.12);  color: #fde047; border-color: rgba(234,179,8,.3); }
+    .sev-low      { background: rgba(14,165,233,.12); color: #7dd3fc; border-color: rgba(14,165,233,.3); }
+
+    /* Nav link active */
+    .nav-link { position: relative; }
+    .nav-link::after { content:''; position:absolute; bottom:-2px; left:50%; right:50%; height:2px; background:#0ea5e9; border-radius:2px; transition: left .2s, right .2s; }
+    .nav-link:hover::after { left:0; right:0; }
+
+    /* Step cards */
+    .step-card { position:relative; overflow:hidden; }
+    .step-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(14,165,233,.06),transparent); pointer-events:none; }
+
+    /* Trace step icon */
+    .trace-check { color: #0ea5e9; }
+
+    /* Input focus ring */
+    input:focus { outline: none; box-shadow: 0 0 0 2px rgba(14,165,233,0.4), 0 0 16px rgba(14,165,233,0.1); }
+
+    /* Filter active */
+    .filter-active { background: rgba(14,165,233,.15); border-color: #0ea5e9; color: #7dd3fc; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-200 min-h-screen aurora">
+<body class="bg-grid text-slate-200 min-h-screen">
 
-  <!-- sticky nav -->
-  <nav class="sticky top-0 z-20 backdrop-blur bg-slate-950/70 border-b border-slate-800">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-      <a href="#top" class="flex items-center gap-2.5">
-        <span class="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 grid place-items-center text-base shadow-lg shadow-indigo-900/40">⚖️</span>
-        <span class="font-bold tracking-tight text-white">Crosscheck</span>
+  <!-- ── STICKY NAV ── -->
+  <nav class="sticky top-0 z-30 backdrop-blur-md bg-[#040d1a]/80 border-b border-slate-800/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+
+      <!-- Logo -->
+      <a href="#top" class="flex items-center gap-2.5 group">
+        <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center glow-blue">
+          <!-- Scale/balance icon -->
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v18M3 9l9-6 9 6M5 12l-2 6h4L5 12zM19 12l-2 6h4l-2-6z"/>
+            <line x1="3" y1="21" x2="21" y2="21"/>
+          </svg>
+        </div>
+        <span class="font-bold tracking-tight text-white group-hover:text-sky-300 transition-colors">Crosscheck</span>
       </a>
+
+      <!-- Nav links -->
       <div class="hidden sm:flex items-center gap-1 text-sm text-slate-400">
-        <a href="#audit" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/60">Audit</a>
-        <a href="#map" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/60">Map</a>
-        <a href="#setup" class="px-3 py-1.5 rounded-lg hover:text-white hover:bg-slate-800/60">Setup</a>
+        <a href="#audit" class="nav-link px-3 py-1.5 rounded-lg hover:text-sky-300 transition-colors">Audit</a>
+        <a href="#map" class="nav-link px-3 py-1.5 rounded-lg hover:text-sky-300 transition-colors">Map</a>
+        <a href="#setup" class="nav-link px-3 py-1.5 rounded-lg hover:text-sky-300 transition-colors">Setup</a>
       </div>
+
+      <!-- Status badges -->
       <div class="flex items-center gap-2 text-xs">
-        <span id="provider-badge" class="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900 text-slate-300">provider…</span>
-        <span id="llm-badge" class="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900 text-slate-300">llm…</span>
+        <span id="provider-badge" class="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900/80 text-slate-400 flex items-center gap-1.5">
+          <span class="h-1.5 w-1.5 rounded-full bg-slate-600 pulse-dot"></span>
+          <span>loading…</span>
+        </span>
+        <span id="llm-badge" class="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900/80 text-slate-400 flex items-center gap-1.5">
+          <span class="h-1.5 w-1.5 rounded-full bg-slate-600 pulse-dot"></span>
+          <span>loading…</span>
+        </span>
       </div>
     </div>
   </nav>
 
-  <div id="top" class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+  <div id="top" class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
 
-    <!-- hero / explainer -->
-    <header class="mb-8">
-      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-        Find where your sources <span class="text-violet-300">disagree</span>.
+    <!-- ── HERO ── -->
+    <header class="mb-10">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20">
+          Microsoft Agents League · Reasoning Track
+        </span>
+      </div>
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-white leading-tight mb-4">
+        Find where your sources<br/>
+        <span class="text-glow" style="color:#38bdf8">disagree</span>.
       </h1>
-      <p class="mt-3 text-slate-300 max-w-3xl">
-        Ordinary RAG answers a question from <em>one</em> retrieved document — so when two of your
-        policies, specs, or contracts quietly contradict each other, it grounds in whichever one it
-        happened to fetch and answers <span class="text-slate-100">confidently wrong</span>.
-        <strong class="text-white">Crosscheck does the inverse:</strong> it audits a whole body of
-        knowledge and surfaces the silent conflicts — citing both sides, classifying the clash, and
-        ranking by severity. Grounded by Microsoft <span class="text-violet-300">Foundry IQ</span>.
+      <p class="text-slate-400 max-w-2xl text-base leading-relaxed">
+        Standard RAG retrieves from a single document and answers confidently — even when two of
+        your policies silently contradict each other. <strong class="text-slate-200">Crosscheck
+        inverts this:</strong> it audits your entire knowledge base, surfaces every conflict,
+        cites both sides, classifies the clash type, and ranks by severity.
+        Grounded via Microsoft <span class="text-sky-400 font-medium">Foundry IQ</span>.
       </p>
 
-      <!-- how it works -->
-      <div class="grid sm:grid-cols-3 gap-3 mt-6">
-        <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-          <div class="text-xl mb-1">🔍</div>
-          <div class="font-semibold text-slate-100 text-sm">1 · Retrieve across sources</div>
-          <p class="text-xs text-slate-400 mt-1">Foundry IQ pulls relevant passages from many documents at once, with citations.</p>
+      <!-- ── HOW IT WORKS ── -->
+      <div class="grid sm:grid-cols-3 gap-3 mt-8">
+        <div class="step-card rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 hover:border-sky-900/60 transition-colors">
+          <div class="flex items-center gap-2.5 mb-2">
+            <div class="h-8 w-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
+              <!-- Search icon -->
+              <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+            </div>
+            <span class="text-[11px] font-bold uppercase tracking-widest text-slate-500">Step 01</span>
+          </div>
+          <div class="font-semibold text-slate-100 text-sm mb-1">Retrieve across sources</div>
+          <p class="text-xs text-slate-500 leading-relaxed">Foundry IQ pulls relevant passages from many documents simultaneously, each with a grounded citation.</p>
         </div>
-        <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-          <div class="text-xl mb-1">⚖️</div>
-          <div class="font-semibold text-slate-100 text-sm">2 · Extract & compare claims</div>
-          <p class="text-xs text-slate-400 mt-1">Each passage becomes atomic claims; the agent compares claims about the same subject.</p>
+
+        <div class="step-card rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 hover:border-sky-900/60 transition-colors">
+          <div class="flex items-center gap-2.5 mb-2">
+            <div class="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+              <!-- GitCompare icon -->
+              <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
+                <path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/>
+                <path d="m8 3-2 3 2 3"/><path d="m16 21 2-3-2-3"/>
+              </svg>
+            </div>
+            <span class="text-[11px] font-bold uppercase tracking-widest text-slate-500">Step 02</span>
+          </div>
+          <div class="font-semibold text-slate-100 text-sm mb-1">Extract &amp; compare claims</div>
+          <p class="text-xs text-slate-500 leading-relaxed">Each passage is decomposed into atomic claims; the agent compares claims that address the same subject.</p>
         </div>
-        <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-          <div class="text-xl mb-1">📑</div>
-          <div class="font-semibold text-slate-100 text-sm">3 · Report cited conflicts</div>
-          <p class="text-xs text-slate-400 mt-1">A ranked report — every conflict needs two citations from two different sources.</p>
+
+        <div class="step-card rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 hover:border-sky-900/60 transition-colors">
+          <div class="flex items-center gap-2.5 mb-2">
+            <div class="h-8 w-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+              <!-- FileWarning icon -->
+              <svg class="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                <polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="12" y1="9" x2="12.01" y2="9"/>
+              </svg>
+            </div>
+            <span class="text-[11px] font-bold uppercase tracking-widest text-slate-500">Step 03</span>
+          </div>
+          <div class="font-semibold text-slate-100 text-sm mb-1">Report cited conflicts</div>
+          <p class="text-xs text-slate-500 leading-relaxed">A ranked conflict report — every contradiction requires two independent citations from two different sources.</p>
         </div>
       </div>
     </header>
 
-    <!-- controls -->
-    <section id="audit" class="scroll-mt-20 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5 mb-6">
+    <!-- ── AUDIT CONTROLS ── -->
+    <section id="audit" class="scroll-mt-20 rounded-2xl border border-slate-800/80 bg-slate-900/30 p-5 mb-6 glow-blue">
+      <div class="flex items-center gap-2 mb-4">
+        <!-- MagnifyingGlass -->
+        <svg class="w-4 h-4 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <span class="text-sm font-semibold text-slate-200">Run an audit</span>
+      </div>
       <div class="flex flex-col sm:flex-row gap-3">
-        <input id="query" type="text" placeholder="Audit a topic — e.g. password policy, refund window, API rate limit"
-          class="flex-1 rounded-xl bg-slate-950 border border-slate-700 px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/60" />
+        <div class="relative flex-1">
+          <input id="query" type="text"
+            placeholder="Audit a topic — e.g. password policy, refund window, API rate limit"
+            class="w-full rounded-xl bg-[#040d1a] border border-slate-700/80 px-4 py-3 pr-10 text-sm text-slate-100 placeholder-slate-600 transition-all" />
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/>
+            </svg>
+          </div>
+        </div>
         <div class="flex gap-2">
-          <button id="run-btn" class="rounded-xl bg-violet-600 hover:bg-violet-500 px-5 py-3 text-sm font-semibold text-white transition">Run audit</button>
-          <button id="scan-btn" class="rounded-xl border border-slate-700 hover:border-slate-500 px-5 py-3 text-sm font-semibold text-slate-200 transition">Full scan</button>
+          <button id="run-btn"
+            class="flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 active:bg-sky-700 px-5 py-3 text-sm font-semibold text-white transition-all shadow-lg shadow-sky-900/30">
+            <svg id="run-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span id="run-label">Run audit</span>
+          </button>
+          <button id="scan-btn"
+            class="flex items-center gap-2 rounded-xl border border-slate-700 hover:border-sky-700 hover:bg-sky-900/20 px-5 py-3 text-sm font-semibold text-slate-200 transition-all">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+            </svg>
+            Full scan
+          </button>
         </div>
       </div>
-      <div id="examples" class="flex flex-wrap gap-2 mt-3 text-xs text-slate-400"></div>
+      <div id="examples" class="flex flex-wrap gap-2 mt-3 text-xs text-slate-500"></div>
     </section>
 
-    <!-- reasoning trace -->
-    <section id="trace-section" class="hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5 mb-6">
-      <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Reasoning trace</h2>
+    <!-- ── REASONING TRACE ── -->
+    <section id="trace-section" class="hidden rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4 sm:p-5 mb-6">
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5m4 0h10m0 0V3m0 8v4a2 2 0 0 1-2 2H9"/>
+        </svg>
+        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Reasoning trace</h2>
+      </div>
       <ol id="trace" class="space-y-2"></ol>
     </section>
 
-    <!-- summary -->
+    <!-- ── SUMMARY BAR ── -->
     <section id="summary-section" class="hidden mb-5">
-      <div class="flex flex-wrap items-center gap-3">
-        <span id="summary-text" class="text-sm text-slate-300"></span>
+      <div class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
+        <div class="flex items-center gap-2">
+          <!-- BarChart icon -->
+          <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
+          </svg>
+          <span id="summary-text" class="text-sm text-slate-300"></span>
+        </div>
         <span class="flex-1"></span>
-        <div id="filters" class="flex flex-wrap items-center gap-2"></div>
+        <div id="filters" class="flex flex-wrap items-center gap-1.5"></div>
       </div>
     </section>
 
-    <!-- conflict map / visualizer -->
-    <section id="map" class="hidden scroll-mt-20 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5 mb-6">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="text-sm font-semibold text-slate-100">Conflict map</h2>
-        <div id="graph-legend" class="flex items-center gap-3 text-[11px] text-slate-400"></div>
+    <!-- ── CONFLICT MAP ── -->
+    <section id="map" class="hidden scroll-mt-20 rounded-2xl border border-slate-800/60 bg-slate-900/20 p-4 sm:p-5 mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          <h2 class="text-sm font-semibold text-slate-200">Conflict map</h2>
+        </div>
+        <div id="graph-legend" class="flex items-center gap-3 text-[11px] text-slate-500"></div>
       </div>
-      <p class="text-xs text-slate-500 mb-2">Each node is a source document; each arc is a contradiction (color = severity, thickness = confidence). Click an arc to jump to its details.</p>
-      <div class="w-full overflow-x-auto">
-        <svg id="graph" viewBox="0 0 640 470" class="w-full max-w-3xl mx-auto" style="min-width:520px"></svg>
+      <p class="text-xs text-slate-600 mb-3">Each node is a source document; each arc is a contradiction. Arc color indicates severity; arc thickness indicates confidence. Click an arc to jump to its details.</p>
+      <div class="w-full overflow-x-auto rounded-xl border border-slate-800/40 bg-[#040d1a]/60 p-2">
+        <svg id="graph" viewBox="0 0 640 420" class="w-full max-w-3xl mx-auto" style="min-width:480px"></svg>
       </div>
     </section>
 
-    <!-- results -->
+    <!-- ── CONFLICT RESULTS ── -->
     <section id="results" class="space-y-4"></section>
 
-    <!-- note -->
-    <p id="note" class="hidden text-sm text-slate-400 mt-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4"></p>
-
-    <!-- setup & access -->
-    <section id="setup" class="scroll-mt-20 mt-10 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-semibold text-slate-100">Setup &amp; access <span class="text-slate-500 font-normal">(Step 0)</span></h2>
-        <button id="recheck" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-300">Re-check</button>
+    <!-- ── EMPTY / NOTE ── -->
+    <div id="note" class="hidden mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
+      <div class="flex items-center gap-2 text-sm text-slate-400">
+        <svg class="w-4 h-4 shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="note-text"></span>
       </div>
-      <div id="setup-overall" class="text-sm text-slate-300 mb-3"></div>
+    </div>
+
+    <!-- ── SETUP ── -->
+    <section id="setup" class="scroll-mt-20 mt-10 rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <h2 class="text-sm font-semibold text-slate-200">Setup &amp; access</h2>
+        </div>
+        <button id="recheck"
+          class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-slate-700 hover:border-sky-700 hover:text-sky-300 text-slate-400 transition-colors">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+          </svg>
+          Re-check
+        </button>
+      </div>
+      <div id="setup-overall" class="text-sm text-slate-400 mb-4"></div>
       <div id="setup-checks" class="grid sm:grid-cols-3 gap-3 mb-4"></div>
-      <details class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-        <summary class="cursor-pointer text-sm text-slate-200 font-medium">Go live on Foundry IQ — 3 commands</summary>
-        <ol class="mt-3 space-y-2 text-xs text-slate-400 list-decimal list-inside">
-          <li>Check access (read-only): <code class="mono text-violet-300">./infra/check_access.ps1</code></li>
-          <li>Provision + upload the bundled corpus (an empty Azure is expected): <code class="mono text-violet-300">./infra/setup_foundry_iq.ps1</code></li>
-          <li>Create the knowledge base in <code class="mono">ai.azure.com</code> → Build → Knowledge, set <code class="mono text-violet-300">PROVIDER=foundry</code> in <code class="mono">.env</code>, restart.</li>
+      <details class="rounded-xl border border-slate-800/60 bg-[#040d1a]/60 p-4">
+        <summary class="cursor-pointer text-sm text-slate-300 font-medium flex items-center gap-2">
+          <svg class="w-4 h-4 text-sky-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.99 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 14.92z"/>
+          </svg>
+          Go live on Foundry IQ — 3 commands
+        </summary>
+        <ol class="mt-3 space-y-2 text-xs text-slate-500 list-decimal list-inside leading-relaxed">
+          <li>Check access (read-only): <code class="mono text-sky-400">./infra/check_access.ps1</code></li>
+          <li>Provision + upload corpus: <code class="mono text-sky-400">./infra/setup_foundry_iq.ps1</code></li>
+          <li>Create knowledge base in <code class="mono">ai.azure.com</code> → Build → Knowledge, then set <code class="mono text-sky-400">PROVIDER=foundry</code> in <code class="mono">.env</code> and restart.</li>
         </ol>
-        <p class="mt-3 text-xs text-slate-500">Your Azure being empty is fine — Crosscheck brings its own data: the setup script uploads <code class="mono">corpus/</code> for you. Full guide: <code class="mono">infra/README.md</code>.</p>
+        <p class="mt-3 text-[11px] text-slate-600">An empty Azure subscription is expected — the setup script uploads <code class="mono">corpus/</code> for you. Full guide: <code class="mono">infra/README.md</code>.</p>
       </details>
     </section>
 
-    <footer class="mt-12 pt-6 border-t border-slate-800 text-xs text-slate-500">
-      Crosscheck · Microsoft Agents League · Reasoning track · IQ layer: Foundry IQ ·
-      <span class="text-slate-600">Synthetic demo corpus — no confidential data.</span>
+    <footer class="mt-12 pt-6 border-t border-slate-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-600">
+      <span>Crosscheck · Microsoft Agents League · Reasoning track · IQ layer: Foundry IQ</span>
+      <span>Synthetic demo corpus — no confidential data.</span>
     </footer>
   </div>
 
